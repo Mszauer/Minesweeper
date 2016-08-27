@@ -22,9 +22,17 @@ public class GenerateGameboard : MonoBehaviour {
         for (int i = 0;i < buttons.Length ; i++) {
             buttons[i] = new GameObject[numButtons];
         }
+        GenerateBoard(new Vector2(Screen.width, Screen.height), buttons);//screenSize+buttons array
+        GenerateBomb(0);//current bombs = argument
 
-        GenerateBoard(new Vector2(Screen.width, Screen.height), buttons);
-        GenerateBomb(buttons);
+        for(int col = 0; col < buttons.Length; col++) {
+            for(int row = 0; row < buttons[col].Length; row++) {
+                int neighborsTouching = NeighborCheck(col, row);
+                if (neighborsTouching > 0) {
+                    buttons[col][row].GetComponentInChildren<Text>().text = neighborsTouching.ToString();
+                }
+            }
+        }
     }
 
     protected void GenerateBoard(Vector2 screenSize,GameObject[][] buttons) {
@@ -41,26 +49,75 @@ public class GenerateGameboard : MonoBehaviour {
 
                 button.GetComponent<RectTransform>().anchoredPosition = new Vector3(spawnPos.x + xOffset, spawnPos.y + yOffset);//spawn at location w/ visual offset applied
                 button.GetComponent<RectTransform>().localScale = new Vector3(1f, 1f, 1f);//set scale to 1 from 0 (parent scale = 0)
+
                 button.GetComponentInChildren<Text>().text = "";
 
             }
         }
     }
 
-    protected void GenerateBomb(GameObject[][] buttons) {
-        int activeBombs = 0;
+    protected void GenerateBomb(int activeBombs) {
         Random r = new Random();
         for (int col = 0; col < buttons.Length; col++) {
             for(int row = 0; row < buttons[col].Length; row++) {
-                if (activeBombs < numBombs) {
-                    if (Random.Range(0, 8) == 1) {
-                        buttons[col][row].GetComponent<BombComponent>().isBomb = true;
-                        activeBombs++;
-                        Debug.Log("Bomb located at col:" + col + " row: " + row);
+                if (!buttons[col][row].GetComponent<BombComponent>().isBomb) {//recursion check
+                    if (activeBombs < numBombs) {
+                        if (Random.Range(0, 8) == 1) {
+                            buttons[col][row].GetComponent<BombComponent>().isBomb = true;
+                            activeBombs++;
+                            Debug.Log("Bomb located at col:" + col + " row: " + row);
+                        }
                     }
                 }
             }
         }
+        //recursively call if not enough bombs spawned
+        if (activeBombs < numBombs) {
+            GenerateBomb(activeBombs);
+        }
     }
    
+    protected int NeighborCheck(int col, int row) {
+        int numTouching = 0;
+        //above left
+        
+        //above
+        if (row > 0) {
+            if (buttons[col][row].GetComponent<BombComponent>().isBomb) {
+                numTouching++;
+            }
+        }
+
+        //above right
+
+
+        //left
+        if (col > 0) {
+            if (buttons[col][row].GetComponent<BombComponent>().isBomb) {
+                numTouching++;
+            }
+        }
+
+        //right
+        if (col < buttons.Length) {
+            if (buttons[col][row].GetComponent<BombComponent>().isBomb) {
+                numTouching++;
+            }
+        }
+
+        //under left
+
+
+        //under
+        if (row < buttons[col].Length) {
+            if (buttons[col][row].GetComponent<BombComponent>().isBomb) {
+                numTouching++;
+            }
+        }
+
+        //under right
+
+
+        return numTouching;
+    }
 }
