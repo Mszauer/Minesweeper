@@ -80,37 +80,50 @@ public class GenerateGameboard : MonoBehaviour {
     protected int NeighborCheck(int col, int row) {
         int numTouching = 0;
         //above left
-        
+        if (row > 0 && col > 0) {
+            if (buttons[col-1][row - 1].GetComponent<BombComponent>().isBomb) {
+                numTouching++;
+            }
+        }
+
         //above
         if (row > 0) {
-            if (buttons[col][row].GetComponent<BombComponent>().isBomb) {
+            if (buttons[col][row-1].GetComponent<BombComponent>().isBomb) {
                 numTouching++;
             }
         }
 
         //above right
-
+        if (row > 0 && col < buttons.Length-1) {
+            if (buttons[col+1][row - 1].GetComponent<BombComponent>().isBomb) {
+                numTouching++;
+            }
+        }
 
         //left
         if (col > 0) {
-            if (buttons[col][row].GetComponent<BombComponent>().isBomb) {
+            if (buttons[col-1][row].GetComponent<BombComponent>().isBomb) {
                 numTouching++;
             }
         }
 
         //right
-        if (col < buttons.Length) {
-            if (buttons[col][row].GetComponent<BombComponent>().isBomb) {
+        if (col < buttons.Length-1) {
+            if (buttons[col+1][row].GetComponent<BombComponent>().isBomb) {
                 numTouching++;
             }
         }
 
         //under left
-
+        if (row < buttons[col].Length-1 && col > 0) {
+            if (buttons[col-1][row + 1].GetComponent<BombComponent>().isBomb) {
+                numTouching++;
+            }
+        }
 
         //under
-        if (row < buttons[col].Length) {
-            if (buttons[col][row].GetComponent<BombComponent>().isBomb) {
+        if (row < buttons[col].Length-1) {
+            if (buttons[col][row+1].GetComponent<BombComponent>().isBomb) {
                 numTouching++;
             }
         }
