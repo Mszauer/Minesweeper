@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
@@ -16,6 +17,13 @@ public class ToggleManager : MonoBehaviour {
                     buttonDownToggle.sprite = gameObject.GetComponentInParent<GenerateGameboard>().bombSprite;
                 }
                 gameObject.GetComponent<Toggle>().interactable = false;
+
+                //cascade neighbors
+                List<GameObject> neighbors= gameObject.GetComponentInParent<GenerateGameboard>().NonBombNeighbors(gameObject);
+                foreach(GameObject neighbor in neighbors) {
+                    gameObject.GetComponent<Toggle>().interactable = false;
+                }
+
             }
             else if (mouse.button == PointerEventData.InputButton.Right) {
                 gameObject.GetComponent<FlagComponent>().OnRightClick();
@@ -28,6 +36,5 @@ public class ToggleManager : MonoBehaviour {
                 }
             }
         }
-        
     }
 }

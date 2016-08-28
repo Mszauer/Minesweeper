@@ -27,7 +27,7 @@ public class GenerateGameboard : MonoBehaviour {
 
         for(int col = 0; col < buttons.Length; col++) {
             for(int row = 0; row < buttons[col].Length; row++) {
-                int neighborsTouching = NeighborCheck(col, row);
+                int neighborsTouching = BombNeighbors(col, row).Count;
                 if (neighborsTouching > 0) {
                     buttons[col][row].GetComponentInChildren<Text>().text = neighborsTouching.ToString();
                 }
@@ -77,60 +77,140 @@ public class GenerateGameboard : MonoBehaviour {
         }
     }
    
-    protected int NeighborCheck(int col, int row) {
-        int numTouching = 0;
+    public List<GameObject> BombNeighbors(int col, int row) {
+        List<GameObject> neighbors = new List<GameObject>();
         //above left
         if (row > 0 && col > 0) {
             if (buttons[col-1][row - 1].GetComponent<BombComponent>().isBomb) {
-                numTouching++;
+                neighbors.Add(buttons[col - 1][row - 1]);
             }
         }
 
         //above
         if (row > 0) {
             if (buttons[col][row-1].GetComponent<BombComponent>().isBomb) {
-                numTouching++;
+                neighbors.Add(buttons[col][row - 1]);
             }
         }
 
         //above right
         if (row > 0 && col < buttons.Length-1) {
             if (buttons[col+1][row - 1].GetComponent<BombComponent>().isBomb) {
-                numTouching++;
+                neighbors.Add(buttons[col + 1][row - 1]);
             }
         }
 
         //left
         if (col > 0) {
             if (buttons[col-1][row].GetComponent<BombComponent>().isBomb) {
-                numTouching++;
+                neighbors.Add(buttons[col - 1][row]);
             }
         }
 
         //right
         if (col < buttons.Length-1) {
             if (buttons[col+1][row].GetComponent<BombComponent>().isBomb) {
-                numTouching++;
+                neighbors.Add(buttons[col + 1][row]);
             }
         }
 
         //under left
         if (row < buttons[col].Length-1 && col > 0) {
             if (buttons[col-1][row + 1].GetComponent<BombComponent>().isBomb) {
-                numTouching++;
+                neighbors.Add(buttons[col - 1][row + 1]);
             }
         }
 
         //under
         if (row < buttons[col].Length-1) {
             if (buttons[col][row+1].GetComponent<BombComponent>().isBomb) {
-                numTouching++;
+                neighbors.Add(buttons[col][row + 1]);
             }
         }
 
         //under right
+        if (row < buttons[col].Length - 1 && col < buttons.Length - 1) {
+            if (buttons[col + 1][row + 1].GetComponent<BombComponent>().isBomb) {
+                neighbors.Add(buttons[col + 1][row + 1]);
+            }
+        }
 
-
-        return numTouching;
+        return neighbors;
     }
+    public List<GameObject> NonBombNeighbors(GameObject buttonPressed) {
+        List<GameObject> neighbor = new List<GameObject>();
+        int col = 0;
+        int row = 0;
+        for (; col < buttons.Length; col++) {
+            bool found = false;
+            for(; row < buttons[col].Length; row++) {
+                if (buttons[col][row] == buttonPressed) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                break;
+            }
+        }
+        //check neighbors, if not a bomb add to list, recursively call
+        //above
+        if (row > 0) {
+            if (!buttons[col][row - 1].GetComponent<BombComponent>().isBomb) {
+                neighbor.Add(buttons[col][row - 1]);
+                NonBombNeighbors(neighbor[neighbor.Count - 1]);
+            }
+        }
+
+        //above right
+        if (row > 0 && col < buttons.Length - 1) {
+            if (!buttons[col + 1][row - 1].GetComponent<BombComponent>().isBomb) {
+                neighbor.Add(buttons[col + 1][row - 1]);
+                NonBombNeighbors(neighbor[neighbor.Count - 1]);
+            }
+        }
+
+        //left
+        if (col > 0) {
+            if (!buttons[col - 1][row].GetComponent<BombComponent>().isBomb) {
+                neighbor.Add(buttons[col - 1][row]);
+                NonBombNeighbors(neighbor[neighbor.Count - 1]);
+            }
+        }
+
+        //right
+        if (col < buttons.Length - 1) {
+            if (!buttons[col + 1][row].GetComponent<BombComponent>().isBomb) {
+                neighbor.Add(buttons[col + 1][row]);
+                NonBombNeighbors(neighbor[neighbor.Count - 1]);
+            }
+        }
+
+        //under left
+        if (row < buttons[col].Length - 1 && col > 0) {
+            if (!buttons[col - 1][row + 1].GetComponent<BombComponent>().isBomb) {
+                neighbor.Add(buttons[col - 1][row + 1]);
+                NonBombNeighbors(neighbor[neighbor.Count - 1]);
+            }
+        }
+
+        //under
+        if (row < buttons[col].Length - 1) {
+            if (!buttons[col][row + 1].GetComponent<BombComponent>().isBomb) {
+                neighbor.Add(buttons[col][row + 1]);
+                NonBombNeighbors(neighbor[neighbor.Count - 1]);
+            }
+        }
+
+        //under right
+        if (row < buttons[col].Length - 1 && col < buttons.Length - 1) {
+            if (!buttons[col + 1][row + 1].GetComponent<BombComponent>().isBomb) {
+                neighbor.Add(buttons[col + 1][row + 1]);
+                NonBombNeighbors(neighbor[neighbor.Count - 1]);
+            }
+        }
+        //return non-bomb neighbor list
+        return neighbor;
+    }
+
 }
