@@ -137,12 +137,11 @@ public class GenerateGameboard : MonoBehaviour {
 
         return neighbors;
     }
-    public List<GameObject> NonBombNeighbors(GameObject buttonPressed) {
-        List<GameObject> neighbor = new List<GameObject>();
+    public void CascadeInteractive(GameObject buttonPressed) {
         int col = 0;
         int row = 0;
-        for (; col < buttons.Length; col++) {
-            bool found = false;
+        bool found = false;
+        for (; col < buttons.Length; col++) {//removing -1 leads to out of bounds error
             for(; row < buttons[col].Length; row++) {
                 if (buttons[col][row] == buttonPressed) {
                     found = true;
@@ -152,65 +151,28 @@ public class GenerateGameboard : MonoBehaviour {
             if (found) {
                 break;
             }
-        }
-        //check neighbors, if not a bomb add to list, recursively call
-        //above
-        if (row > 0) {
-            if (!buttons[col][row - 1].GetComponent<BombComponent>().isBomb) {
-                neighbor.Add(buttons[col][row - 1]);
-                NonBombNeighbors(neighbor[neighbor.Count - 1]);
+            else{
+                row = 0;
+
             }
         }
 
-        //above right
-        if (row > 0 && col < buttons.Length - 1) {
-            if (!buttons[col + 1][row - 1].GetComponent<BombComponent>().isBomb) {
-                neighbor.Add(buttons[col + 1][row - 1]);
-                NonBombNeighbors(neighbor[neighbor.Count - 1]);
-            }
-        }
+        int[][] indices = new int[][] {
+            new int[]{-1,-1 }, new int[]{0, -1}, new int[] {1, -1},
+            new int[] {-1,0},  new int[] {0,0 }, new int[] {1,0 },
+            new int[] {-1,1 },new int[] {0,1 },new int[] {1,1 }
+        };
 
-        //left
-        if (col > 0) {
-            if (!buttons[col - 1][row].GetComponent<BombComponent>().isBomb) {
-                neighbor.Add(buttons[col - 1][row]);
-                NonBombNeighbors(neighbor[neighbor.Count - 1]);
-            }
-        }
+        for(int i = 0; i < indices.Length; i++) {
+            int newRow = row + indices[i][1];
+            int newCol = col + indices[i][0];
 
-        //right
-        if (col < buttons.Length - 1) {
-            if (!buttons[col + 1][row].GetComponent<BombComponent>().isBomb) {
-                neighbor.Add(buttons[col + 1][row]);
-                NonBombNeighbors(neighbor[neighbor.Count - 1]);
+            if (newRow >= 0 && newCol >= 0 &&
+                newCol < buttons.Length && newRow < buttons[newCol].Length && !buttons[newCol][newRow].GetComponent<BombComponent>().isBomb && buttons[newCol][newRow].GetComponent<Toggle>().interactable) {
+                buttons[newCol][newRow].GetComponent<Toggle>().interactable = false;
+                buttons[newCol][newRow].GetComponent<Toggle>().isOn = false;
+                CascadeInteractive(buttons[newCol][newRow]);
             }
         }
-
-        //under left
-        if (row < buttons[col].Length - 1 && col > 0) {
-            if (!buttons[col - 1][row + 1].GetComponent<BombComponent>().isBomb) {
-                neighbor.Add(buttons[col - 1][row + 1]);
-                NonBombNeighbors(neighbor[neighbor.Count - 1]);
-            }
-        }
-
-        //under
-        if (row < buttons[col].Length - 1) {
-            if (!buttons[col][row + 1].GetComponent<BombComponent>().isBomb) {
-                neighbor.Add(buttons[col][row + 1]);
-                NonBombNeighbors(neighbor[neighbor.Count - 1]);
-            }
-        }
-
-        //under right
-        if (row < buttons[col].Length - 1 && col < buttons.Length - 1) {
-            if (!buttons[col + 1][row + 1].GetComponent<BombComponent>().isBomb) {
-                neighbor.Add(buttons[col + 1][row + 1]);
-                NonBombNeighbors(neighbor[neighbor.Count - 1]);
-            }
-        }
-        //return non-bomb neighbor list
-        return neighbor;
     }
-
 }
