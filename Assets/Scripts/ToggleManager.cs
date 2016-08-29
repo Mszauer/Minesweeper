@@ -17,9 +17,9 @@ public class ToggleManager : MonoBehaviour {
                     buttonDownToggle.sprite = gameObject.GetComponentInParent<GenerateGameboard>().bombSprite;
                 }
                 gameObject.GetComponent<Toggle>().interactable = false;
-
                 //cascade neighbors
                 gameObject.GetComponentInParent<GenerateGameboard>().CascadeInteractive(gameObject);
+                gameObject.GetComponentInChildren<Text>().enabled = true;
 
 
             }

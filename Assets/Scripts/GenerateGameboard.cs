@@ -58,7 +58,6 @@ public class GenerateGameboard : MonoBehaviour {
     }
 
     protected void GenerateBomb(int activeBombs) {
-        Random r = new Random();
         for (int col = 0; col < buttons.Length; col++) {
             for(int row = 0; row < buttons[col].Length; row++) {
                 if (!buttons[col][row].GetComponent<BombComponent>().isBomb) {//recursion check
@@ -170,7 +169,10 @@ public class GenerateGameboard : MonoBehaviour {
             int newCol = col + indices[i][0];
 
             if (newRow >= 0 && newCol >= 0 &&
-                newCol < buttons.Length && newRow < buttons[newCol].Length && !buttons[newCol][newRow].GetComponent<BombComponent>().isBomb && buttons[newCol][newRow].GetComponent<Toggle>().interactable) {
+                newCol < buttons.Length && newRow < buttons[newCol].Length && 
+                !buttons[newCol][newRow].GetComponent<BombComponent>().isBomb && 
+                buttons[newCol][newRow].GetComponent<Toggle>().interactable) {
+
                 buttons[newCol][newRow].GetComponent<Toggle>().interactable = false;
                 buttons[newCol][newRow].GetComponent<Toggle>().isOn = false;
                 //implement that cascade wont work on things with text component that's not blank
