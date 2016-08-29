@@ -49,8 +49,9 @@ public class GenerateGameboard : MonoBehaviour {
 
                 button.GetComponent<RectTransform>().anchoredPosition = new Vector3(spawnPos.x + xOffset, spawnPos.y + yOffset);//spawn at location w/ visual offset applied
                 button.GetComponent<RectTransform>().localScale = new Vector3(1f, 1f, 1f);//set scale to 1 from 0 (parent scale = 0)
-
                 button.GetComponentInChildren<Text>().text = "";
+
+                button.GetComponentInChildren<Text>().enabled = false;
 
             }
         }
@@ -156,13 +157,14 @@ public class GenerateGameboard : MonoBehaviour {
 
             }
         }
-
+        if (buttonPressed.GetComponentInChildren<Text>().text != "") {
+            return;
+        }
         int[][] indices = new int[][] {
             new int[]{-1,-1 }, new int[]{0, -1}, new int[] {1, -1},
             new int[] {-1,0},  new int[] {0,0 }, new int[] {1,0 },
             new int[] {-1,1 },new int[] {0,1 },new int[] {1,1 }
         };
-
         for(int i = 0; i < indices.Length; i++) {
             int newRow = row + indices[i][1];
             int newCol = col + indices[i][0];
@@ -171,6 +173,10 @@ public class GenerateGameboard : MonoBehaviour {
                 newCol < buttons.Length && newRow < buttons[newCol].Length && !buttons[newCol][newRow].GetComponent<BombComponent>().isBomb && buttons[newCol][newRow].GetComponent<Toggle>().interactable) {
                 buttons[newCol][newRow].GetComponent<Toggle>().interactable = false;
                 buttons[newCol][newRow].GetComponent<Toggle>().isOn = false;
+                //implement that cascade wont work on things with text component that's not blank
+                
+                buttons[newCol][newRow].GetComponentInChildren<Text>().enabled = true;
+
                 CascadeInteractive(buttons[newCol][newRow]);
             }
         }

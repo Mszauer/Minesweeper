@@ -19,7 +19,8 @@ public class ToggleManager : MonoBehaviour {
                 gameObject.GetComponent<Toggle>().interactable = false;
 
                 //cascade neighbors
-               gameObject.GetComponentInParent<GenerateGameboard>().CascadeInteractive(gameObject);
+                gameObject.GetComponentInParent<GenerateGameboard>().CascadeInteractive(gameObject);
+
 
             }
             else if (mouse.button == PointerEventData.InputButton.Right) {
