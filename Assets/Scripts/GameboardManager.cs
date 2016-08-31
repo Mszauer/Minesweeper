@@ -19,6 +19,7 @@ public class GameboardManager : MonoBehaviour {
     public int numButtons = 8;
 
     protected Vector2 screenSize;
+    protected float currentTime = 0.0f;
 
     public void Awake() {
         buttons = new GameObject[numButtons][];
@@ -187,5 +188,9 @@ public class GameboardManager : MonoBehaviour {
                 CascadeInteractive(buttons[newCol][newRow]);
             }
         }
+    }
+    public void Update() {
+        currentTime += Time.deltaTime;
+        timer.GetComponentInChildren<Text>().text = currentTime.ToString();
     }
 }

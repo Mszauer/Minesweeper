@@ -8,11 +8,17 @@ public class ToggleManager : MonoBehaviour {
     public Image buttonUpToggle;
     public Image buttonDownToggle;
     public Sprite buttonUp;
+    public GameObject resetButton;
+
 
     public void OnClick(BaseEventData data) {
         PointerEventData mouse = data as PointerEventData;
         if (mouse != null) {
             if (mouse.button == PointerEventData.InputButton.Left) {
+                 if (gameObject == resetButton) {
+                    gameObject.GetComponentInParent<GameboardManager>().Reset();
+                    return;
+                }
                 if (gameObject.GetComponent<BombComponent>().isBomb) {
                     buttonDownToggle.sprite = gameObject.GetComponentInParent<GameboardManager>().bombSprite;
                 }
