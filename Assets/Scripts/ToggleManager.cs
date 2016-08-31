@@ -14,11 +14,11 @@ public class ToggleManager : MonoBehaviour {
         if (mouse != null) {
             if (mouse.button == PointerEventData.InputButton.Left) {
                 if (gameObject.GetComponent<BombComponent>().isBomb) {
-                    buttonDownToggle.sprite = gameObject.GetComponentInParent<GenerateGameboard>().bombSprite;
+                    buttonDownToggle.sprite = gameObject.GetComponentInParent<GameboardManager>().bombSprite;
                 }
                 gameObject.GetComponent<Toggle>().interactable = false;
                 //cascade neighbors
-                gameObject.GetComponentInParent<GenerateGameboard>().CascadeInteractive(gameObject);
+                gameObject.GetComponentInParent<GameboardManager>().CascadeInteractive(gameObject);
                 gameObject.GetComponentInChildren<Text>().enabled = true;
 
 
@@ -26,7 +26,7 @@ public class ToggleManager : MonoBehaviour {
             else if (mouse.button == PointerEventData.InputButton.Right) {
                 gameObject.GetComponent<FlagComponent>().OnRightClick();
                 if (gameObject.GetComponent<FlagComponent>().isFlag) {
-                    buttonUpToggle.sprite = gameObject.GetComponentInParent<GenerateGameboard>().flagSprite;
+                    buttonUpToggle.sprite = gameObject.GetComponentInParent<GameboardManager>().flagSprite;
                 }
                 else {
                     //set sprite to normal up state
