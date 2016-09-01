@@ -5,6 +5,9 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class GameboardManager : MonoBehaviour {
+    public enum GameState { Playing, GameOver };
+    public static GameState currentGameState = GameState.Playing;
+
     public GameObject parent = null;
     public GameObject buttonRef = null;
     public GameObject timer;
@@ -20,6 +23,7 @@ public class GameboardManager : MonoBehaviour {
 
     protected Vector2 screenSize;
     protected float currentTime = 0.0f;
+    protected int score = 0;
 
     public void Awake() {
         buttons = new GameObject[numButtons][];
@@ -37,6 +41,9 @@ public class GameboardManager : MonoBehaviour {
                 }
             }
         }
+
+        //score does not load properly
+        score = PlayerPrefs.GetInt("Best Score");
     }
     public void Reset() {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
@@ -144,10 +151,12 @@ public class GameboardManager : MonoBehaviour {
         return neighbors;
     }
     public void CascadeInteractive(GameObject buttonPressed) {
+        I need to somehow make it so that things won't cascade or be interactable after a bomb has been clicked
+        
         int col = 0;
         int row = 0;
         bool found = false;
-        for (; col < buttons.Length; col++) {//removing -1 leads to out of bounds error
+        for (; col < buttons.Length; col++) {
             for(; row < buttons[col].Length; row++) {
                 if (buttons[col][row] == buttonPressed) {
                     found = true;
@@ -162,35 +171,58 @@ public class GameboardManager : MonoBehaviour {
 
             }
         }
-        if (buttonPressed.GetComponentInChildren<Text>().text != "") {
+
+        if (!buttonPressed.GetComponent<BombComponent>().isBomb) {//not a bomb? increase score
+            score++;
+            Debug.Log("Current Score: " + score.ToString());
+        }
+        else {
+            BombClicked(score);//save score into player prefs
+        }
+        if (buttonPressed.GetComponentInChildren<Text>().text != "") {//stop cascade if any neighbors are bombs
             return;
         }
-        int[][] indices = new int[][] {
+
+        int[][] indices = new int[][] {//logical array for neighbors
             new int[]{-1,-1 }, new int[]{0, -1}, new int[] {1, -1},
             new int[] {-1,0},  new int[] {0,0 }, new int[] {1,0 },
             new int[] {-1,1 },new int[] {0,1 },new int[] {1,1 }
         };
+
         for(int i = 0; i < indices.Length; i++) {
+            //loops through all the indices
             int newRow = row + indices[i][1];
             int newCol = col + indices[i][0];
 
             if (newRow >= 0 && newCol >= 0 &&
                 newCol < buttons.Length && newRow < buttons[newCol].Length && 
                 !buttons[newCol][newRow].GetComponent<BombComponent>().isBomb && 
-                buttons[newCol][newRow].GetComponent<Toggle>().interactable) {
+                buttons[newCol][newRow].GetComponent<Toggle>().interactable) {//Toggle button and neighbors if it is not a bomb, is inside bounds, and has not been toggled
 
                 buttons[newCol][newRow].GetComponent<Toggle>().interactable = false;
                 buttons[newCol][newRow].GetComponent<Toggle>().isOn = false;
-                //implement that cascade wont work on things with text component that's not blank
                 
                 buttons[newCol][newRow].GetComponentInChildren<Text>().enabled = true;
 
-                CascadeInteractive(buttons[newCol][newRow]);
+                CascadeInteractive(buttons[newCol][newRow]);//recursively call for all neighbors
             }
         }
+        
     }
     public void Update() {
-        currentTime += Time.deltaTime;
-        timer.GetComponentInChildren<Text>().text = currentTime.ToString();
+        if (currentGameState == GameState.Playing) {
+            currentTime += Time.deltaTime;
+            timer.GetComponentInChildren<Text>().text = FormatTime(currentTime);
+        }
+        scoreKeeper.GetComponentInChildren<Text>().text = score.ToString("00");
+    }
+
+    string FormatTime(float time) {
+        string minutes = Mathf.Floor(time / 60).ToString("00");
+        string seconds = Mathf.Floor(time % 60).ToString("00");
+        return minutes + ":" + seconds;
+    }
+    public void BombClicked(int currentScore) {
+        PlayerPrefs.SetInt("Best Score",currentScore);
     }
 }

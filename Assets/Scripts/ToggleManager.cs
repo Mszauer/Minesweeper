@@ -15,28 +15,38 @@ public class ToggleManager : MonoBehaviour {
         PointerEventData mouse = data as PointerEventData;
         if (mouse != null) {
             if (mouse.button == PointerEventData.InputButton.Left) {
-                 if (gameObject == resetButton) {
-                    gameObject.GetComponentInParent<GameboardManager>().Reset();
-                    return;
+                if(GameboardManager.currentGameState == GameboardManager.GameState.Playing) {
+                    if (gameObject == resetButton) {
+                        gameObject.GetComponentInParent<GameboardManager>().Reset();
+                        return;
+                    }
+                    if (gameObject.GetComponent<BombComponent>().isBomb) {
+                        buttonDownToggle.sprite = gameObject.GetComponentInParent<GameboardManager>().bombSprite;
+                        GameboardManager.currentGameState = GameboardManager.GameState.GameOver; //gets hit, goes to game over but other logic still executes. normal toggle logic
+                    }
+                    gameObject.GetComponent<Toggle>().interactable = false;
+                    //cascade neighbors
+                    gameObject.GetComponentInParent<GameboardManager>().CascadeInteractive(gameObject);
+                    gameObject.GetComponentInChildren<Text>().enabled = true;
                 }
-                if (gameObject.GetComponent<BombComponent>().isBomb) {
-                    buttonDownToggle.sprite = gameObject.GetComponentInParent<GameboardManager>().bombSprite;
+                else if (GameboardManager.currentGameState == GameboardManager.GameState.GameOver) {
+                    if (gameObject == resetButton) {
+                        gameObject.GetComponentInParent<GameboardManager>().Reset();
+                        return;
+                    }
                 }
-                gameObject.GetComponent<Toggle>().interactable = false;
-                //cascade neighbors
-                gameObject.GetComponentInParent<GameboardManager>().CascadeInteractive(gameObject);
-                gameObject.GetComponentInChildren<Text>().enabled = true;
-
 
             }
             else if (mouse.button == PointerEventData.InputButton.Right) {
-                gameObject.GetComponent<FlagComponent>().OnRightClick();
-                if (gameObject.GetComponent<FlagComponent>().isFlag) {
-                    buttonUpToggle.sprite = gameObject.GetComponentInParent<GameboardManager>().flagSprite;
-                }
-                else {
-                    //set sprite to normal up state
-                    buttonUpToggle.sprite = buttonUp;
+                if (GameboardManager.currentGameState == GameboardManager.GameState.Playing) {
+                    gameObject.GetComponent<FlagComponent>().OnRightClick();
+                    if (gameObject.GetComponent<FlagComponent>().isFlag) {
+                        buttonUpToggle.sprite = gameObject.GetComponentInParent<GameboardManager>().flagSprite;
+                    }
+                    else {
+                        //set sprite to normal up state
+                        buttonUpToggle.sprite = buttonUp;
+                    }
                 }
             }
         }
