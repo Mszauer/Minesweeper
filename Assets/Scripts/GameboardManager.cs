@@ -5,8 +5,8 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class GameboardManager : MonoBehaviour {
-    public enum GameState { Playing, GameOver };
-    public static GameState currentGameState = GameState.Playing;
+    public enum GameState { Interactable, nonInteractable };
+    public static GameState currentGameState = GameState.Interactable;
 
     public GameObject parent = null;
     public GameObject buttonRef = null;
@@ -18,12 +18,13 @@ public class GameboardManager : MonoBehaviour {
 
     public GameObject[][] buttons = null;
 
-    public int numBombs = 2;
+    public int numBombs = 1;
     public int numButtons = 8;
 
     protected Vector2 screenSize;
     protected float currentTime = 0.0f;
-    protected int score = 0;
+    protected int currentScore = 0;
+    protected int bestScore = 0;
 
     public void Awake() {
         buttons = new GameObject[numButtons][];
@@ -42,54 +43,13 @@ public class GameboardManager : MonoBehaviour {
             }
         }
 
-        //score does not load properly
-        score = PlayerPrefs.GetInt("Best Score");
+        bestScore = PlayerPrefs.GetInt("Best Score");
     }
     public void Reset() {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    }
-    protected void GenerateBoard(Vector2 screenSize,GameObject[][] buttons) {
-        for (int col = 0; col < buttons.Length; col++) {//36x36 button size
-            int xOffset = col * 35;//visual offset
-            for (int row = 0; row < buttons[col].Length; row++) {
-                int yOffset = row * -35; // visual offset
-
-                GameObject button = Instantiate(buttonRef, new Vector3(), Quaternion.identity) as GameObject; //spawn button from prefab
-                button.name = "Button_" + col + "_" + row;//easier unity access
-                buttons[col][row] = button;//add buttons to list for references
-                button.transform.SetParent(parent.transform);//set transform to gameboard
-                Vector2 spawnPos = new Vector2(27,-27 );//spawn upper left corner at -75,75
-
-                button.GetComponent<RectTransform>().anchoredPosition = new Vector3(spawnPos.x + xOffset, spawnPos.y + yOffset);//spawn at location w/ visual offset applied
-                button.GetComponent<RectTransform>().localScale = new Vector3(1f, 1f, 1f);//set scale to 1 from 0 (parent scale = 0)
-                button.GetComponentInChildren<Text>().text = "";
-
-                button.GetComponentInChildren<Text>().enabled = false;
-
-            }
-        }
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        currentGameState = GameState.Interactable;
     }
 
-    protected void GenerateBomb(int activeBombs) {
-        for (int col = 0; col < buttons.Length; col++) {
-            for(int row = 0; row < buttons[col].Length; row++) {
-                if (!buttons[col][row].GetComponent<BombComponent>().isBomb) {//recursion check
-                    if (activeBombs < numBombs) {
-                        if (Random.Range(0, 8) == 1) {
-                            buttons[col][row].GetComponent<BombComponent>().isBomb = true;
-                            activeBombs++;
-                            Debug.Log("Bomb located at col:" + col + " row: " + row);
-                        }
-                    }
-                }
-            }
-        }
-        //recursively call if not enough bombs spawned
-        if (activeBombs < numBombs) {
-            GenerateBomb(activeBombs);
-        }
-    }
-   
     public List<GameObject> BombNeighbors(int col, int row) {
         List<GameObject> neighbors = new List<GameObject>();
         //above left
@@ -151,7 +111,7 @@ public class GameboardManager : MonoBehaviour {
         return neighbors;
     }
     public void CascadeInteractive(GameObject buttonPressed) {
-        I need to somehow make it so that things won't cascade or be interactable after a bomb has been clicked
+        //I need to somehow make it so that things won't cascade or be interactable after a bomb has been clicked
         
         int col = 0;
         int row = 0;
@@ -173,11 +133,11 @@ public class GameboardManager : MonoBehaviour {
         }
 
         if (!buttonPressed.GetComponent<BombComponent>().isBomb) {//not a bomb? increase score
-            score++;
-            Debug.Log("Current Score: " + score.ToString());
+            currentScore++;
+            //Debug.Log("Score: "+score.ToString());
         }
         else {
-            BombClicked(score);//save score into player prefs
+            
         }
         if (buttonPressed.GetComponentInChildren<Text>().text != "") {//stop cascade if any neighbors are bombs
             return;
@@ -207,22 +167,96 @@ public class GameboardManager : MonoBehaviour {
                 CascadeInteractive(buttons[newCol][newRow]);//recursively call for all neighbors
             }
         }
-        
+        if (ActiveCellsLeft() == 0) {
+
+        }
     }
     public void Update() {
-        if (currentGameState == GameState.Playing) {
+        if (currentGameState == GameState.Interactable) {
             currentTime += Time.deltaTime;
             timer.GetComponentInChildren<Text>().text = FormatTime(currentTime);
         }
-        scoreKeeper.GetComponentInChildren<Text>().text = score.ToString("00");
+        scoreKeeper.GetComponentInChildren<Text>().text = bestScore.ToString("00");
     }
 
-    string FormatTime(float time) {
+    public void BombClicked() {
+        PlayerPrefs.SetInt("Best Score", currentScore);
+        SetGameboardInteractable(false);
+        currentGameState = GameState.nonInteractable;
+    }
+
+    protected void GenerateBoard(Vector2 screenSize, GameObject[][] buttons) {
+        for (int col = 0; col < buttons.Length; col++) {//36x36 button size
+            int xOffset = col * 35;//visual offset
+            for (int row = 0; row < buttons[col].Length; row++) {
+                int yOffset = row * -35; // visual offset
+
+                GameObject button = Instantiate(buttonRef, new Vector3(), Quaternion.identity) as GameObject; //spawn button from prefab
+                button.name = "Button_" + col + "_" + row;//easier unity access
+                buttons[col][row] = button;//add buttons to list for references
+                button.transform.SetParent(parent.transform);//set transform to gameboard
+                Vector2 spawnPos = new Vector2(27, -27);//spawn upper left corner at -75,75
+
+                button.GetComponent<RectTransform>().anchoredPosition = new Vector3(spawnPos.x + xOffset, spawnPos.y + yOffset);//spawn at location w/ visual offset applied
+                button.GetComponent<RectTransform>().localScale = new Vector3(1f, 1f, 1f);//set scale to 1 from 0 (parent scale = 0)
+                button.GetComponentInChildren<Text>().text = "";
+
+                button.GetComponentInChildren<Text>().enabled = false;
+
+            }
+        }
+    }
+
+    protected void GenerateBomb(int activeBombs) {
+        for (int col = 0; col < buttons.Length; col++) {
+            for (int row = 0; row < buttons[col].Length; row++) {
+                if (!buttons[col][row].GetComponent<BombComponent>().isBomb) {//recursion check
+                    if (activeBombs < numBombs) {
+                        if (Random.Range(0, 8) == 1) {
+                            buttons[col][row].GetComponent<BombComponent>().isBomb = true;
+                            activeBombs++;
+                            //Debug.Log("Bomb located at col:" + col + " row: " + row);
+                        }
+                    }
+                }
+            }
+        }
+        //recursively call if not enough bombs spawned
+        if (activeBombs < numBombs) {
+            GenerateBomb(activeBombs);
+        }
+    }
+
+    protected string FormatTime(float time) {
         string minutes = Mathf.Floor(time / 60).ToString("00");
         string seconds = Mathf.Floor(time % 60).ToString("00");
         return minutes + ":" + seconds;
     }
-    public void BombClicked(int currentScore) {
-        PlayerPrefs.SetInt("Best Score",currentScore);
+
+    protected void SetGameboardInteractable(bool toggle) {
+        for(int col = 0; col < buttons.Length; col++) {
+            for(int row = 0; row < buttons[col].Length; row++) {
+                if (buttons[col][row].GetComponent<Toggle>().interactable != toggle) {
+                    buttons[col][row].GetComponent<Toggle>().interactable = toggle;
+                }
+            }
+        }
+    }
+
+    protected int ActiveCellsLeft() {
+        int activeCells = 0;
+        for(int col = 0; col < buttons.Length; col++) {
+            for (int row = 0; row < buttons[col].Length; row++) {
+                if (buttons[col][row].GetComponent<Toggle>().interactable && (!buttons[col][row].GetComponent<BombComponent>().isBomb)) {
+                    activeCells++;
+                }
+            }
+        }
+        return activeCells;
+    }
+
+    protected void WinGame() {
+        SetGameboardInteractable(false);
+        //display victory text?
     }
 }
