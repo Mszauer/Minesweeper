@@ -62,5 +62,11 @@ public class ToggleManager : MonoBehaviour {
         gameObject.GetComponentInParent<GameboardManager>().Reset();
         return;
     }
-
+    public void FlagBombs() {
+        GameObject[] allBombs = gameboardManager.GetAllBombs();
+        for (int i = 0; i < allBombs.Length; i++) {
+            allBombs[i].GetComponent<FlagComponent>().isFlag = true;
+            allBombs[i].GetComponent<ToggleManager>().buttonUpToggle.sprite = gameObject.GetComponentInParent<GameboardManager>().flagSprite;
+        }
+    }
 }

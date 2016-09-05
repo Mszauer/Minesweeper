@@ -166,13 +166,12 @@ public class GameboardManager : MonoBehaviour {
             currentTime += Time.deltaTime;
             timer.GetComponentInChildren<Text>().text = FormatTime(currentTime);
         }
-        scoreKeeper.GetComponentInChildren<Text>().text = bestTime.ToString("00");
+        scoreKeeper.GetComponentInChildren<Text>().text = FormatTime(bestTime);
     }
 
     public void BombClicked() {
         PlayerPrefs.SetFloat("Best Time", bestTime);
         SetGameboardInteractable(false);
-        currentGameState = GameState.nonInteractable;
     }
 
     protected void GenerateBoard(Vector2 screenSize, GameObject[][] buttons) {
@@ -231,6 +230,12 @@ public class GameboardManager : MonoBehaviour {
                 }
             }
         }
+        if (toggle) {
+            currentGameState = GameState.Interactable;
+        }
+        else {
+            currentGameState = GameState.nonInteractable;
+        }
     }
 
     public int ActiveCellsLeft() {
@@ -247,18 +252,31 @@ public class GameboardManager : MonoBehaviour {
 
     public void Victory(bool won) {
         Text t = victoryMessage.GetComponentInChildren<Text>();
-        if (currentTime > bestTime && true) {
+        if (currentTime < bestTime && won) {
             bestTime = currentTime;
             t.text = "Congratulations!" + "\n Your fastest time is: " + FormatTime(bestTime) + "\n This clear took you: " + FormatTime(currentTime) + "\n This was your fastest clear yet!";
+            Debug.Log("won: "+ won);
         }
         else if (won) {
             t.text = "Congratulations!" + "\n Your fastest time is: " + FormatTime(bestTime) + "\n This clear took you: " + FormatTime(currentTime);
         }
         else if (!won) {
-            t.text = "\n Your fastest time is: " + FormatTime(bestTime) + "\n This clear took you: " + FormatTime(currentTime);
+            t.text = "Oops! \n You exploded a bomb!";
         }
         SetGameboardInteractable(false);
+        
         victoryMessage.SetActive(true);
+    }
 
+    public GameObject[] GetAllBombs() {
+        List<GameObject> bombs = new List<GameObject>();
+        for (int col = 0; col < buttons.Length; col++) {
+            for (int row = 0; row < buttons[col].Length; row++) {
+                if (buttons[col][row].GetComponent<BombComponent>().isBomb) {
+                    bombs.Add(buttons[col][row]);
+                }
+            }
+        }
+        return bombs.ToArray();
     }
 }
