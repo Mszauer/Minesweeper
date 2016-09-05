@@ -10,6 +10,12 @@ public class ToggleManager : MonoBehaviour {
     public Sprite buttonUp;
     public GameObject resetButton;
 
+    protected GameboardManager gameboardManager;
+
+    void Awake() {
+        gameboardManager = FindObjectOfType<GameboardManager>();
+    }
+
     public void OnClick(BaseEventData data) {
         PointerEventData mouse = data as PointerEventData;
         if (mouse != null) {
@@ -18,22 +24,26 @@ public class ToggleManager : MonoBehaviour {
                     ResetClicked();
                 }
 
-                if (GameboardManager.currentGameState == GameboardManager.GameState.Interactable) {
+                else if (gameboardManager.currentGameState == GameboardManager.GameState.Interactable) {
 
                     if (gameObject.GetComponent<BombComponent>().isBomb) {
                         buttonDownToggle.sprite = gameObject.GetComponentInParent<GameboardManager>().bombSprite;
                         gameObject.GetComponentInParent<GameboardManager>().BombClicked();
+                        gameboardManager.Victory(false);
+                        return;
                     }
                     gameObject.GetComponent<Toggle>().interactable = false;
                     //cascade neighbors
                     gameObject.GetComponentInParent<GameboardManager>().CascadeInteractive(gameObject);
                     gameObject.GetComponentInChildren<Text>().enabled = true;
+                    if (gameboardManager.ActiveCellsLeft() == 0) {
+                        gameboardManager.Victory(true);
+                    }
                 }
-                
 
             }
             else if (mouse.button == PointerEventData.InputButton.Right) {
-                if (GameboardManager.currentGameState == GameboardManager.GameState.Interactable) {
+                if (gameboardManager.currentGameState == GameboardManager.GameState.Interactable) {
                     gameObject.GetComponent<FlagComponent>().OnRightClick();
                     if (gameObject.GetComponent<FlagComponent>().isFlag) {
                         buttonUpToggle.sprite = gameObject.GetComponentInParent<GameboardManager>().flagSprite;

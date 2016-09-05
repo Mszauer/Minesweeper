@@ -6,12 +6,13 @@ using UnityEngine.SceneManagement;
 
 public class GameboardManager : MonoBehaviour {
     public enum GameState { Interactable, nonInteractable };
-    public static GameState currentGameState = GameState.Interactable;
+    public GameState currentGameState = GameState.Interactable;
 
     public GameObject parent = null;
     public GameObject buttonRef = null;
     public GameObject timer;
     public GameObject scoreKeeper;
+    public GameObject victoryMessage;
 
     public Sprite bombSprite;
     public Sprite flagSprite;
@@ -23,10 +24,10 @@ public class GameboardManager : MonoBehaviour {
 
     protected Vector2 screenSize;
     protected float currentTime = 0.0f;
-    protected int currentScore = 0;
-    protected int bestScore = 0;
+    protected float bestTime = 0;
 
     public void Awake() {
+        victoryMessage.SetActive(false);
         buttons = new GameObject[numButtons][];
         for (int i = 0;i < buttons.Length ; i++) {
             buttons[i] = new GameObject[numButtons];
@@ -43,11 +44,10 @@ public class GameboardManager : MonoBehaviour {
             }
         }
 
-        bestScore = PlayerPrefs.GetInt("Best Score");
+        bestTime = PlayerPrefs.GetFloat("Best Time");
     }
     public void Reset() {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        currentGameState = GameState.Interactable;
     }
 
     public List<GameObject> BombNeighbors(int col, int row) {
@@ -131,14 +131,6 @@ public class GameboardManager : MonoBehaviour {
 
             }
         }
-
-        if (!buttonPressed.GetComponent<BombComponent>().isBomb) {//not a bomb? increase score
-            currentScore++;
-            //Debug.Log("Score: "+score.ToString());
-        }
-        else {
-            
-        }
         if (buttonPressed.GetComponentInChildren<Text>().text != "") {//stop cascade if any neighbors are bombs
             return;
         }
@@ -167,20 +159,18 @@ public class GameboardManager : MonoBehaviour {
                 CascadeInteractive(buttons[newCol][newRow]);//recursively call for all neighbors
             }
         }
-        if (ActiveCellsLeft() == 0) {
-
-        }
+        
     }
     public void Update() {
         if (currentGameState == GameState.Interactable) {
             currentTime += Time.deltaTime;
             timer.GetComponentInChildren<Text>().text = FormatTime(currentTime);
         }
-        scoreKeeper.GetComponentInChildren<Text>().text = bestScore.ToString("00");
+        scoreKeeper.GetComponentInChildren<Text>().text = bestTime.ToString("00");
     }
 
     public void BombClicked() {
-        PlayerPrefs.SetInt("Best Score", currentScore);
+        PlayerPrefs.SetFloat("Best Time", bestTime);
         SetGameboardInteractable(false);
         currentGameState = GameState.nonInteractable;
     }
@@ -243,7 +233,7 @@ public class GameboardManager : MonoBehaviour {
         }
     }
 
-    protected int ActiveCellsLeft() {
+    public int ActiveCellsLeft() {
         int activeCells = 0;
         for(int col = 0; col < buttons.Length; col++) {
             for (int row = 0; row < buttons[col].Length; row++) {
@@ -255,8 +245,20 @@ public class GameboardManager : MonoBehaviour {
         return activeCells;
     }
 
-    protected void WinGame() {
+    public void Victory(bool won) {
+        Text t = victoryMessage.GetComponentInChildren<Text>();
+        if (currentTime > bestTime && true) {
+            bestTime = currentTime;
+            t.text = "Congratulations!" + "\n Your fastest time is: " + FormatTime(bestTime) + "\n This clear took you: " + FormatTime(currentTime) + "\n This was your fastest clear yet!";
+        }
+        else if (won) {
+            t.text = "Congratulations!" + "\n Your fastest time is: " + FormatTime(bestTime) + "\n This clear took you: " + FormatTime(currentTime);
+        }
+        else if (!won) {
+            t.text = "\n Your fastest time is: " + FormatTime(bestTime) + "\n This clear took you: " + FormatTime(currentTime);
+        }
         SetGameboardInteractable(false);
-        //display victory text?
+        victoryMessage.SetActive(true);
+
     }
 }
